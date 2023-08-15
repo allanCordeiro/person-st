@@ -1,0 +1,33 @@
+version: '3'
+services:
+  db:
+    image: postgres:15.2-alpine
+    volumes:      
+      - ./sql:/migrations
+    command: postgres -c 'max_connections=100'    
+    tty: true
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    restart: always
+    environment:
+      POSTGRES_USER: rinha
+      POSTGRES_PASSWORD: rinha123
+      POSTGRES_DB: rinhadb    
+    networks:
+      - rinha-go-nw
+  db-schema-check:
+    image: postgres:15.2-alpine
+    restart: no
+    volumes:
+      - ./sql:/migrations    
+    entrypoint: [ "sh", "-c", "chmod +x /migrations/validate_migrations.sh && /migrations/validate_migrations.sh" ]
+    depends_on:
+      - db
+    networks:
+      - rinha-go-nw
+networks:
+  rinha-go-nw:
+
+# https://www.enterprisedb.com/postgres-tutorials/introduction-postgresql-performance-tuning-and-optimization
