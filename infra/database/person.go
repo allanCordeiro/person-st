@@ -63,8 +63,7 @@ func (p *PersonDB) GetByID(id string) (*domain.Person, error) {
 
 func (p *PersonDB) GetByTerms(term string) ([]domain.Person, error) {
 	var personList []domain.Person
-	term += ":*" //fts wildcard
-	rows, err := p.DB.Query("SELECT id, nickname, name, birth_date, stack FROM rinha.person WHERE full_search @@ TO_TSQUERY($1) LIMIT 50", term)
+	rows, err := p.DB.Query("SELECT id, nickname, name, birth_date, stack FROM rinha.person WHERE full_search @@ PLAINTO_TSQUERY($1) LIMIT 50", term)
 	if err != nil {
 		return nil, err
 	}

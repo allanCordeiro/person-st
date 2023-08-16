@@ -11,7 +11,7 @@ import (
 func (h *PersonHandler) GetByTerms(w http.ResponseWriter, r *http.Request) {
 	input := person.SearchByTermRequestInput{Term: r.URL.Query().Get("t")}
 	if input.Term == "" {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
