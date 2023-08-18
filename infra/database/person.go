@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 
 	"github.com/AllanCordeiro/person-st/application/domain"
 )
@@ -64,6 +65,40 @@ func (p *PersonDB) GetByID(id string) (*domain.Person, error) {
 func (p *PersonDB) GetByTerms(term string) ([]domain.Person, error) {
 	var personList []domain.Person
 	rows, err := p.DB.Query("SELECT id, nickname, name, birth_date, stack FROM rinha.person WHERE full_search @@ PLAINTO_TSQUERY($1) LIMIT 50", term)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		person := &domain.Person{}
+		stackList := &domain.StackList{}
+		stackJson := []byte{}
+		err = rows.Scan(&person.Id, &person.NickName, &person.Name, &person.BirthDate, &stackJson)
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(stackJson, &stackList.Stacks)
+		if err != nil {
+			return nil, err
+		}
+		person.AddStackList(stackList.GetStacks())
+		personList = append(personList, *person)
+	}
+	return personList, nil
+
+	// if len(personList) > 0 {
+	// 	return personList, nil
+	// }
+	// return p.fallback(term)
+
+}
+
+func (p *PersonDB) fallback(term string) ([]domain.Person, error) {
+	log.Println("entrei aqui")
+	var personList []domain.Person
+	rows, err := p.DB.Query(`SELECT id, nickname, name, birth_date, stack FROM rinha.person WHERE
+	 name ILIKE '%' || $1 || '%'`, term)
 	if err != nil {
 		return nil, err
 	}

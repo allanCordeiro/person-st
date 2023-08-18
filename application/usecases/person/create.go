@@ -1,17 +1,22 @@
 package person
 
 import (
+	"log"
+
 	"github.com/AllanCordeiro/person-st/application/domain"
 	"github.com/AllanCordeiro/person-st/application/gateway"
+	"github.com/AllanCordeiro/person-st/infra/cache"
 )
 
 type CreatePersonUseCase struct {
 	PersonGateway gateway.PersonGateway
+	Cache         cache.Cache
 }
 
-func NewCreatePersonUseCase(personGateway gateway.PersonGateway) *CreatePersonUseCase {
+func NewCreatePersonUseCase(personGateway gateway.PersonGateway, cache cache.Cache) *CreatePersonUseCase {
 	return &CreatePersonUseCase{
 		PersonGateway: personGateway,
+		Cache:         cache,
 	}
 }
 
@@ -42,7 +47,16 @@ func (u *CreatePersonUseCase) Execute(input CreatePersonRequestInput) (*CreatePe
 	if err != nil {
 		return nil, err
 	}
+
+	u.setCache(*newPerson)
 	return &CreatePersonRequestOutput{ID: newPerson.Id}, nil
+}
+
+func (u *CreatePersonUseCase) setCache(person domain.Person) {
+	err := u.Cache.Set(person)
+	if err != nil {
+		log.Println("error to set cache: " + err.Error())
+	}
 }
 
 func generateStackList(stackList []string) (*domain.StackList, error) {

@@ -8,5 +8,3 @@ type PersonGateway interface {
 	GetByTerms(term string) ([]domain.Person, error)
 	GetTotal() (*int64, error)
 }
-
-//https://arctype.com/blog/postgres-full-text-search/
