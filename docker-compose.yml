@@ -2,7 +2,7 @@ version: '3'
 services:
   go-api1:
       container_name: go-api1 
-      image: allancordeiros/rinha-go:latest                        
+      image: allancordeiros/rinha-go:latest                              
       hostname: go-api1              
       depends_on:
         - db      
@@ -19,7 +19,7 @@ services:
         - rinha-go-nw
   go-api2:
       container_name: go-api2 
-      image: allancordeiros/rinha-go:latest                        
+      image: allancordeiros/rinha-go:latest                              
       hostname: go-api2              
       depends_on:
         - db 

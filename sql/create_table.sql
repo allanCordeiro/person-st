@@ -1,8 +1,14 @@
 CREATE SCHEMA IF NOT EXISTS rinha;
 
 CREATE OR REPLACE FUNCTION extract_names(jsonb) RETURNS TEXT[] AS $$
-    SELECT ARRAY(SELECT value->>'name' FROM jsonb_array_elements($1) AS value)
-$$ LANGUAGE SQL IMMUTABLE;
+BEGIN
+    IF jsonb_typeof($1) = 'array' THEN
+        RETURN ARRAY(SELECT value->>'name' FROM jsonb_array_elements($1) AS value);
+    ELSE
+        RETURN '{}';
+    END IF;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 
 
