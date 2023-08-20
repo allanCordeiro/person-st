@@ -24,21 +24,20 @@ func main() {
 	}
 	defer db.Close()
 
-	pool = &redis.Pool{
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		redisPort = "6379"
+	}
+	pool := &redis.Pool{
 		MaxIdle:     10,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", "redis:6379")
+			return redis.Dial("tcp", "redis:"+redisPort)
 		},
 	}
-	cx, err := redis.Dial("tcp", "redis:6379")
-	if err != nil {
-		panic(err)
-	}
-	defer cx.Close()
 
 	personDB := database.NewPersonDB(db)
-	personCache := cache.NewRedisInstance(cx)
+	personCache := cache.NewRedisInstance(pool)
 
 	webserver.Serve(personDB, personCache)
 }

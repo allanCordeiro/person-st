@@ -35,6 +35,7 @@ type GetByIdRequestOutput struct {
 func (u *GetPersonByIdUseCase) Execute(input GetByIdRequestInput) (*GetByIdRequestOutput, error) {
 	person := u.getCache(input.ID)
 	if person == nil {
+		//return nil, errors.New("sql: no rows in result set")
 		var err error
 		person, err = u.PersonGateway.GetByID(input.ID)
 		if err != nil {

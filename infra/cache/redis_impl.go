@@ -8,18 +8,16 @@ import (
 )
 
 type RedisInstance struct {
-	Conn redis.Conn
+	Pool *redis.Pool
 }
 
-var pool *redis.Pool
-
-func NewRedisInstance(conn redis.Conn) *RedisInstance {
-	return &RedisInstance{Conn: conn}
+func NewRedisInstance(pool *redis.Pool) *RedisInstance {
+	return &RedisInstance{Pool: pool}
 }
 
 func (r *RedisInstance) Get(key string) (*domain.Person, error) {
 	var data []byte
-	conn := pool.Get()
+	conn := r.Pool.Get()
 	defer conn.Close()
 	data, err := redis.Bytes(conn.Do("GET", key))
 	//data, err := redis.Bytes(r.Conn.Do("GET", key))
@@ -37,12 +35,15 @@ func (r *RedisInstance) Get(key string) (*domain.Person, error) {
 
 func (r *RedisInstance) Set(person domain.Person) error {
 	var data []byte
+	conn := r.Pool.Get()
+	defer conn.Close()
 	data, err := json.Marshal(person)
 	if err != nil {
 		return err
 	}
 
-	_, err = redis.Bytes(r.Conn.Do("SET", person.Id, data))
+	_, err = redis.Bytes(conn.Do("SET", person.Id, data))
+	//_, err = redis.Bytes(r.Conn.Do("SET", person.Id, data))
 	if err != nil {
 		return err
 	}

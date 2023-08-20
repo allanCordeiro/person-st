@@ -12,7 +12,7 @@ import (
 )
 
 func Serve(personGateway gateway.PersonGateway, cache cache.Cache) {
-	port := os.Getenv("SPORT")
+	port := os.Getenv("SERVER_PORT")
 	if port == "" {
 		port = "8181"
 	}
