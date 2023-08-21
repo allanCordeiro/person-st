@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -73,9 +74,9 @@ func (p *PersonDB) GetByID(id string) (*domain.Person, error) {
 	return person, nil
 }
 
-func (p *PersonDB) GetByTerms(term string) ([]domain.Person, error) {
+func (p *PersonDB) GetByTerms(ctx context.Context, term string) ([]domain.Person, error) {
 	var personList []domain.Person
-	rows, err := p.DB.Query(`SELECT id, nickname, name, birth_date, stack FROM rinha.person WHERE full_search LIKE '%' || $1 || '%' LIMIT 50`, term)
+	rows, err := p.DB.QueryContext(ctx, `SELECT id, nickname, name, birth_date, stack FROM rinha.person WHERE full_search LIKE '%' || $1 || '%' LIMIT 50`, term)
 	if err != nil {
 		return nil, err
 	}

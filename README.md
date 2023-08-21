@@ -12,9 +12,9 @@ O que foi usado:
  - Redis, como cache
 
  ## Decisões
-  - para o create, a API vai direto no banco de dados. Após salvar, gravo o mesmo dado no REDIS, como cache;
+  - para o create, a API consulta a existencia do apelido no cache, e caso não existe faz a criação no banco de dados. Após salvar, gravo o mesmo dado no REDIS, como cache;
   - para o get por ID, a API valida primeiro se encontra o registro no cache, caso contrário realiza uma consulta no banco;
-  - a busca por termos é feita também diretamente no banco.
+  - a busca por termos é feita diretamente no banco.
 
  Não tem escopo de funcionamento em ambiente de produção. 
 

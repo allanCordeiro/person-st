@@ -1,6 +1,8 @@
 package person
 
 import (
+	"context"
+
 	"github.com/AllanCordeiro/person-st/application/gateway"
 )
 
@@ -18,8 +20,8 @@ type SearchByTermRequestInput struct {
 	Term string
 }
 
-func (u *SearchByTermUseCase) Execute(input SearchByTermRequestInput) (*[]GetByIdRequestOutput, error) {
-	list, err := u.PersonGateway.GetByTerms(input.Term)
+func (u *SearchByTermUseCase) Execute(ctx context.Context, input SearchByTermRequestInput) (*[]GetByIdRequestOutput, error) {
+	list, err := u.PersonGateway.GetByTerms(ctx, input.Term)
 	if err != nil {
 		return nil, err
 	}
