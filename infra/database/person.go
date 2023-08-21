@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 
 	"github.com/AllanCordeiro/person-st/application/domain"
 )
@@ -16,18 +17,29 @@ func NewPersonDB(db *sql.DB) *PersonDB {
 }
 
 func (p *PersonDB) Save(person domain.Person) error {
-	stmt, err := p.DB.Prepare(`INSERT INTO rinha.person (id, nickname, name, birth_date, stack)VALUES ($1, $2, $3, $4, $5)`)
+	stmt, err := p.DB.Prepare(`INSERT INTO rinha.person (id, nickname, name, birth_date, stack, full_search)VALUES ($1, $2, $3, $4, $5, $6)`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
 	stacks, _ := json.Marshal(person.StackList)
-	_, err = stmt.Exec(person.Id, person.NickName, person.Name, person.BirthDate, stacks)
+	fts := p.createFTSInfo(person)
+	_, err = stmt.Exec(person.Id, person.NickName, person.Name, person.BirthDate, stacks, fts)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (p *PersonDB) createFTSInfo(person domain.Person) string {
+	fts := person.NickName + "," + person.Name
+	if len(person.StackList) > 0 {
+		for _, stack := range person.StackList {
+			fts += stack.Name + ","
+		}
+	}
+	return fts
 }
 
 func (p *PersonDB) GetByID(id string) (*domain.Person, error) {
@@ -101,4 +113,15 @@ func (p *PersonDB) GetTotal() (*int64, error) {
 		return nil, err
 	}
 	return &total, nil
+}
+
+func (p *PersonDB) Warmup() {
+	_, err := p.DB.Exec(`INSERT INTO rinha.person(id, nickname, name, birth_date, stack) VALUES ('1', '1', '1', '1901-01-01', '{"name": "stack"}')`)
+	if err != nil {
+		log.Println("warmup error: " + err.Error())
+	}
+	_, err = p.DB.Exec(`DELETE FROM rinha.person WHERE id='1'`)
+	if err != nil {
+		log.Println("warmup delete error: " + err.Error())
+	}
 }

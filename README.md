@@ -16,6 +16,12 @@ O que foi usado:
   - para o get por ID, a API valida primeiro se encontra o registro no cache, caso contrário realiza uma consulta no banco;
   - a busca por termos é feita também diretamente no banco.
 
- É bem próximo do que poderia ser utilizado em um ambiente produtivo, pensando em um worker adicional para popular o cache com os dados já salvo em banco em caso de restarts. 
+ Não tem escopo de funcionamento em ambiente de produção. 
 
- 
+ ## Para executar
+
+ ```
+ docker compose -up
+ ```
+
+ Os serviços mencionados [aqui](https://github.com/zanfranceschi/rinha-de-backend-2023-q3/) estarão prontos para executar pela porta 9999.

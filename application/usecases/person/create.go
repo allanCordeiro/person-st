@@ -1,6 +1,7 @@
 package person
 
 import (
+	"errors"
 	"log"
 
 	"github.com/AllanCordeiro/person-st/application/domain"
@@ -32,24 +33,32 @@ type CreatePersonRequestOutput struct {
 }
 
 func (u *CreatePersonUseCase) Execute(input CreatePersonRequestInput) (*CreatePersonRequestOutput, error) {
-	newPerson, err := domain.CreatePerson(input.NickName, input.Name, input.BirthDate)
-	if err != nil {
-		return nil, err
-	}
-	stackList, err := generateStackList(input.StackList)
-	if err != nil {
-		return nil, err
-	}
-	if len(stackList.GetStacks()) > 0 {
-		newPerson.AddStackList(stackList.GetStacks())
-	}
-	err = u.PersonGateway.Save(*newPerson)
-	if err != nil {
-		return nil, err
-	}
+	err := u.Cache.GetNickname(input.NickName)
+	if err != nil && err.Error() == "redigo: nil returned" {
+		newPerson, err := domain.CreatePerson(input.NickName, input.Name, input.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+		stackList, err := generateStackList(input.StackList)
+		if err != nil {
+			return nil, err
+		}
+		if len(stackList.GetStacks()) > 0 {
+			newPerson.AddStackList(stackList.GetStacks())
+		}
+		err = u.PersonGateway.Save(*newPerson)
+		if err != nil {
+			return nil, err
+		}
 
-	u.setCache(*newPerson)
-	return &CreatePersonRequestOutput{ID: newPerson.Id}, nil
+		u.setCache(*newPerson)
+		err = u.Cache.SetNickname(newPerson.NickName)
+		if err != nil {
+			log.Println("erro ao add no cache " + err.Error())
+		}
+		return &CreatePersonRequestOutput{ID: newPerson.Id}, nil
+	}
+	return nil, errors.New("nickname already exists")
 }
 
 func (u *CreatePersonUseCase) setCache(person domain.Person) {

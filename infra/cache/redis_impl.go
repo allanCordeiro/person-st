@@ -20,7 +20,6 @@ func (r *RedisInstance) Get(key string) (*domain.Person, error) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	data, err := redis.Bytes(conn.Do("GET", key))
-	//data, err := redis.Bytes(r.Conn.Do("GET", key))
 	if err != nil {
 		return nil, err
 	}
@@ -33,6 +32,16 @@ func (r *RedisInstance) Get(key string) (*domain.Person, error) {
 	return &person, nil
 }
 
+func (r *RedisInstance) GetNickname(nickname string) error {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	_, err := redis.Bytes(conn.Do("GET", nickname))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *RedisInstance) Set(person domain.Person) error {
 	var data []byte
 	conn := r.Pool.Get()
@@ -43,7 +52,17 @@ func (r *RedisInstance) Set(person domain.Person) error {
 	}
 
 	_, err = redis.Bytes(conn.Do("SET", person.Id, data))
-	//_, err = redis.Bytes(r.Conn.Do("SET", person.Id, data))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisInstance) SetNickname(nickname string) error {
+	conn := r.Pool.Get()
+	defer conn.Close()
+
+	_, err := redis.Bytes(conn.Do("SET", nickname, ""))
 	if err != nil {
 		return err
 	}

@@ -18,7 +18,7 @@ func main() {
 	if dbURL == "" {
 		dbURL = "postgres://rinha:rinha123@db/rinhadb?sslmode=disable"
 	}
-	db, err := sql.Open("postgres", "postgres://rinha:rinha123@db/rinhadb?sslmode=disable")
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		panic(err)
 	}
@@ -38,6 +38,9 @@ func main() {
 
 	personDB := database.NewPersonDB(db)
 	personCache := cache.NewRedisInstance(pool)
+
+	time.Sleep(3 * time.Second)
+	personDB.Warmup()
 
 	webserver.Serve(personDB, personCache)
 }
