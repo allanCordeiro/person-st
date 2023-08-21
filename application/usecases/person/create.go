@@ -1,17 +1,23 @@
 package person
 
 import (
+	"errors"
+	"log"
+
 	"github.com/AllanCordeiro/person-st/application/domain"
 	"github.com/AllanCordeiro/person-st/application/gateway"
+	"github.com/AllanCordeiro/person-st/infra/cache"
 )
 
 type CreatePersonUseCase struct {
 	PersonGateway gateway.PersonGateway
+	Cache         cache.Cache
 }
 
-func NewCreatePersonUseCase(personGateway gateway.PersonGateway) *CreatePersonUseCase {
+func NewCreatePersonUseCase(personGateway gateway.PersonGateway, cache cache.Cache) *CreatePersonUseCase {
 	return &CreatePersonUseCase{
 		PersonGateway: personGateway,
+		Cache:         cache,
 	}
 }
 
@@ -27,22 +33,39 @@ type CreatePersonRequestOutput struct {
 }
 
 func (u *CreatePersonUseCase) Execute(input CreatePersonRequestInput) (*CreatePersonRequestOutput, error) {
-	newPerson, err := domain.CreatePerson(input.NickName, input.Name, input.BirthDate)
+	err := u.Cache.GetNickname(input.NickName)
+	if err != nil && err.Error() == "redigo: nil returned" {
+		newPerson, err := domain.CreatePerson(input.NickName, input.Name, input.BirthDate)
+		if err != nil {
+			return nil, err
+		}
+		stackList, err := generateStackList(input.StackList)
+		if err != nil {
+			return nil, err
+		}
+		if len(stackList.GetStacks()) > 0 {
+			newPerson.AddStackList(stackList.GetStacks())
+		}
+		err = u.PersonGateway.Save(*newPerson)
+		if err != nil {
+			return nil, err
+		}
+
+		u.setCache(*newPerson)
+		err = u.Cache.SetNickname(newPerson.NickName)
+		if err != nil {
+			log.Println("erro ao add no cache " + err.Error())
+		}
+		return &CreatePersonRequestOutput{ID: newPerson.Id}, nil
+	}
+	return nil, errors.New("nickname already exists")
+}
+
+func (u *CreatePersonUseCase) setCache(person domain.Person) {
+	err := u.Cache.Set(person)
 	if err != nil {
-		return nil, err
+		log.Println("error to set cache: " + err.Error())
 	}
-	stackList, err := generateStackList(input.StackList)
-	if err != nil {
-		return nil, err
-	}
-	if len(stackList.GetStacks()) > 0 {
-		newPerson.AddStackList(stackList.GetStacks())
-	}
-	err = u.PersonGateway.Save(*newPerson)
-	if err != nil {
-		return nil, err
-	}
-	return &CreatePersonRequestOutput{ID: newPerson.Id}, nil
 }
 
 func generateStackList(stackList []string) (*domain.StackList, error) {

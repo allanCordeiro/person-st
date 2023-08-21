@@ -10,7 +10,7 @@ import (
 
 func (h *PersonHandler) GetPersonById(w http.ResponseWriter, r *http.Request) {
 	input := person.GetByIdRequestInput{ID: chi.URLParam(r, "personID")}
-	usecase := person.NewGetPersonByIdUseCase(h.PersonGateway)
+	usecase := person.NewGetPersonByIdUseCase(h.PersonGateway, h.Cache)
 	personOutput, err := usecase.Execute(input)
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {

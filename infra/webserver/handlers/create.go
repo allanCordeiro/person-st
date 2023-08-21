@@ -22,7 +22,7 @@ func (h *PersonHandler) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usecase := person.NewCreatePersonUseCase(h.PersonGateway)
+	usecase := person.NewCreatePersonUseCase(h.PersonGateway, h.Cache)
 	personOutput, err := usecase.Execute(input)
 	if err != nil {
 		log.Println(err)
