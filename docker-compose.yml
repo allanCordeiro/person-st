@@ -69,7 +69,7 @@ services:
     image: postgres:15.2-alpine
     volumes:
       - .data:/var/lib/postgresql/data
-      - ./sql:/migrations
+      - ./sql/create_table.sql:/docker-entrypoint-initdb.d/init.sql
       - ./sql/postgresql.conf:/etc/postgresql/postgresql.conf
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     tty: true
@@ -87,16 +87,6 @@ services:
         limits:
           cpus: '0.9'
           memory: '1.8GB'  
-    networks:
-      - rinha-go-nw
-  db-schema-check:
-    image: postgres:15.2-alpine
-    restart: no
-    volumes:
-      - ./sql:/migrations    
-    entrypoint: [ "sh", "-c", "chmod +x /migrations/validate_migrations.sh && /migrations/validate_migrations.sh" ]
-    depends_on:
-      - db
     networks:
       - rinha-go-nw
 networks:
