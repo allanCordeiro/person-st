@@ -3,7 +3,8 @@ services:
   go-api1:
       container_name: go-api1 
       image: allancordeiros/rinha-go:latest                                          
-      hostname: go-api1              
+      hostname: go-api1    
+      restart: always          
       depends_on:
         - db      
       environment: 
@@ -21,6 +22,7 @@ services:
       container_name: go-api2 
       image: allancordeiros/rinha-go:latest                                          
       hostname: go-api2              
+      restart: always
       depends_on:
         - db 
       environment: 
