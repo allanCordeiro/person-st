@@ -1,8 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS rinha;
 
 CREATE TABLE IF NOT EXISTS rinha.person(
-    id VARCHAR(36) NOT NULL,
-    nickname VARCHAR(32) UNIQUE NOT NULL,
+    id VARCHAR(36) UNIQUE NOT NULL,
+    nickname VARCHAR(32) PRIMARY KEY NOT NULL,
     name VARCHAR(100) NOT NULL,
     birth_date DATE NOT NULL,
     stack JSONB,    

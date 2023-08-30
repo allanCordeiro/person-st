@@ -103,7 +103,7 @@ func (p *PersonDB) GetByTerms(ctx context.Context, term string) ([]domain.Person
 
 func (p *PersonDB) GetTotal() (*int64, error) {
 	var total int64
-	stmt, err := p.DB.Prepare("SELECT count(id) FROM rinha.person")
+	stmt, err := p.DB.Prepare("SELECT count(*) FROM rinha.person")
 	if err != nil {
 		return nil, err
 	}
