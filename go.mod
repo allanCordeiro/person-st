@@ -9,4 +9,7 @@ require (
 	github.com/lib/pq v1.10.9
 )
 
-require github.com/gomodule/redigo v1.8.9
+require (
+	github.com/gomodule/redigo v1.8.9
+	github.com/rabbitmq/amqp091-go v1.8.1
+)
