@@ -53,6 +53,7 @@ func main() {
 	personDB := database.NewPersonDB(db)
 	personCache := cache.NewRedisInstance(pool)
 	personQueue := queue.NewRabbitMQImpl(mqChannel)
+	personQueue.QueueDeclare("person.created")
 
 	time.Sleep(3 * time.Second)
 	personDB.Warmup()

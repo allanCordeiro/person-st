@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -23,7 +22,7 @@ func (h *PersonHandler) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usecase := person.NewCreatePersonUseCase(h.PersonGateway, h.Cache)
+	usecase := person.NewCreatePersonUseCase(h.Cache, *h.Queue)
 	personOutput, err := usecase.Execute(input)
 	if err != nil {
 		log.Println(err)
@@ -34,8 +33,6 @@ func (h *PersonHandler) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	output := &RequestCreateOutput{
 		value: "/pessoas/" + personOutput.ID,
 	}
-
-	go h.Queue.Publish("teste", fmt.Sprintf("%+v", input))
 
 	w.Header().Add("Location", output.value)
 	w.WriteHeader(http.StatusCreated)

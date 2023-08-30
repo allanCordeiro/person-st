@@ -1,23 +1,24 @@
 package person
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 
 	"github.com/AllanCordeiro/person-st/application/domain"
-	"github.com/AllanCordeiro/person-st/application/gateway"
 	"github.com/AllanCordeiro/person-st/infra/cache"
+	"github.com/AllanCordeiro/person-st/infra/queue"
 )
 
 type CreatePersonUseCase struct {
-	PersonGateway gateway.PersonGateway
-	Cache         cache.Cache
+	Cache cache.Cache
+	Queue queue.RabbitMQImpl
 }
 
-func NewCreatePersonUseCase(personGateway gateway.PersonGateway, cache cache.Cache) *CreatePersonUseCase {
+func NewCreatePersonUseCase(cache cache.Cache, queue queue.RabbitMQImpl) *CreatePersonUseCase {
 	return &CreatePersonUseCase{
-		PersonGateway: personGateway,
-		Cache:         cache,
+		Cache: cache,
+		Queue: queue,
 	}
 }
 
@@ -26,6 +27,14 @@ type CreatePersonRequestInput struct {
 	Name      string   `json:"nome"`
 	BirthDate string   `json:"nascimento"`
 	StackList []string `json:"stack"`
+}
+
+func (c *CreatePersonRequestInput) String() (string, error) {
+	data, err := json.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
 
 type CreatePersonRequestOutput struct {
@@ -46,10 +55,13 @@ func (u *CreatePersonUseCase) Execute(input CreatePersonRequestInput) (*CreatePe
 		if len(stackList.GetStacks()) > 0 {
 			newPerson.AddStackList(stackList.GetStacks())
 		}
-		err = u.PersonGateway.Save(*newPerson)
+
+		message, err := input.String()
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
+
+		go u.Queue.Publish("person.created", message)
 
 		u.setCache(*newPerson)
 		err = u.Cache.SetNickname(newPerson.NickName)
