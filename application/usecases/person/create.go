@@ -1,7 +1,6 @@
 package person
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
 
@@ -29,14 +28,6 @@ type CreatePersonRequestInput struct {
 	StackList []string `json:"stack"`
 }
 
-func (c *CreatePersonRequestInput) String() (string, error) {
-	data, err := json.Marshal(c)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
-}
-
 type CreatePersonRequestOutput struct {
 	ID string
 }
@@ -56,7 +47,7 @@ func (u *CreatePersonUseCase) Execute(input CreatePersonRequestInput) (*CreatePe
 			newPerson.AddStackList(stackList.GetStacks())
 		}
 
-		message, err := input.String()
+		message, err := newPerson.String()
 		if err != nil {
 			panic(err)
 		}

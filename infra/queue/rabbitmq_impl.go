@@ -49,3 +49,23 @@ func (r *RabbitMQImpl) Publish(queue, body string) error {
 	}
 	return nil
 }
+
+func (r *RabbitMQImpl) Consume(queue string, out chan<- amqp.Delivery) error {
+	msgs, err := r.Channel.Consume(
+		queue,
+		"worker",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	for msg := range msgs {
+		out <- msg
+	}
+	return nil
+}

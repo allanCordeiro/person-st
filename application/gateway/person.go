@@ -7,6 +7,7 @@ import (
 )
 
 type PersonGateway interface {
+	BulkInsert(people []domain.Person) error
 	Save(domain.Person) error
 	GetByID(id string) (*domain.Person, error)
 	GetByTerms(ctx context.Context, term string) ([]domain.Person, error)

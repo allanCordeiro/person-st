@@ -1,6 +1,4 @@
-CREATE SCHEMA IF NOT EXISTS rinha;
-
-CREATE TABLE IF NOT EXISTS rinha.person(
+CREATE TABLE IF NOT EXISTS person(
     id VARCHAR(36) UNIQUE NOT NULL,
     nickname VARCHAR(32) PRIMARY KEY NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -10,4 +8,4 @@ CREATE TABLE IF NOT EXISTS rinha.person(
 );
 
 CREATE EXTENSION pg_trgm;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS i_ilikeseach on rinha.person using gist(full_search GIST_TRGM_OPS);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS i_ilikeseach on person using gist(full_search GIST_TRGM_OPS);

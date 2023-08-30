@@ -13,6 +13,7 @@ import (
 	"github.com/AllanCordeiro/person-st/infra/database"
 	"github.com/AllanCordeiro/person-st/infra/queue"
 	"github.com/AllanCordeiro/person-st/infra/webserver"
+	"github.com/AllanCordeiro/person-st/infra/worker"
 )
 
 func main() {
@@ -38,6 +39,8 @@ func main() {
 		},
 	}
 
+	//TODO: await rabbitMQ starting up
+	time.Sleep(15 * time.Second)
 	rabbitMQ, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 	if err != nil {
 		panic(err)
@@ -55,8 +58,10 @@ func main() {
 	personQueue := queue.NewRabbitMQImpl(mqChannel)
 	personQueue.QueueDeclare("person.created")
 
-	time.Sleep(3 * time.Second)
 	personDB.Warmup()
+
+	worker := worker.NewCreatePersonWorker(personDB, *personQueue)
+	go worker.Run()
 
 	webserver.Serve(personDB, personCache, personQueue)
 }

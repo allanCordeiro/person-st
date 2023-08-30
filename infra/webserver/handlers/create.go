@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/AllanCordeiro/person-st/application/usecases/person"
@@ -25,7 +24,6 @@ func (h *PersonHandler) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	usecase := person.NewCreatePersonUseCase(h.Cache, *h.Queue)
 	personOutput, err := usecase.Execute(input)
 	if err != nil {
-		log.Println(err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}

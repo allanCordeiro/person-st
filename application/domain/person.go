@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -71,4 +72,12 @@ func BuildPerson(id string, nickname string, name string, birthdate time.Time, s
 		BirthDate: birthdate,
 		StackList: stack,
 	}, nil
+}
+
+func (p *Person) String() (string, error) {
+	data, err := json.Marshal(p)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
