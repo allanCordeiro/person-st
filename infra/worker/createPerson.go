@@ -3,6 +3,7 @@ package worker
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/AllanCordeiro/person-st/application/domain"
 	"github.com/AllanCordeiro/person-st/application/gateway"
@@ -31,19 +32,32 @@ func NewCreatePersonWorker(gateway gateway.PersonGateway, queue queue.RabbitMQIm
 
 func (p *CreatePersonWorker) Run() {
 	msgs := make(chan amqp.Delivery)
+	var peopleBulk []domain.Person
+	timer := time.NewTicker(4 * time.Second)
 
 	go p.Queue.Consume("person.created", msgs)
-	var peopleBulk []domain.Person
-	for msg := range msgs {
-		peopleBulk = append(peopleBulk, p.hydrate(msg.Body))
-		if len(peopleBulk) >= 500 {
-			err := p.PersonGateway.BulkInsert(peopleBulk)
-			if err != nil {
-				log.Println(err)
-				msg.Nack(false, true)
+
+	for {
+		select {
+		case msg := <-msgs:
+			peopleBulk = append(peopleBulk, p.hydrate(msg.Body))
+			if len(peopleBulk) >= 500 {
+				err := p.PersonGateway.BulkInsert(peopleBulk)
+				if err != nil {
+					log.Println(err)
+					msg.Nack(false, true)
+				}
+				msg.Ack(true)
+				peopleBulk = nil
 			}
-			msg.Ack(false)
-			peopleBulk = nil
+		case <-timer.C:
+			if len(peopleBulk) > 0 {
+				err := p.PersonGateway.BulkInsert(peopleBulk)
+				if err != nil {
+					log.Println(err)
+				}
+				peopleBulk = nil
+			}
 		}
 	}
 }
@@ -52,8 +66,8 @@ func (p *CreatePersonWorker) hydrate(person []byte) domain.Person {
 	var input domain.Person
 	err := json.Unmarshal(person, &input)
 	if err != nil {
-		//TODO: temporary. take this off ASAP
-		panic(err)
+		log.Printf("error to hydrate message: %v", person)
+		return domain.Person{}
 	}
 	return input
 }
