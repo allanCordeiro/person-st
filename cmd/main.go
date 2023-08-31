@@ -7,10 +7,13 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/lib/pq"
+	amqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/AllanCordeiro/person-st/infra/cache"
 	"github.com/AllanCordeiro/person-st/infra/database"
+	"github.com/AllanCordeiro/person-st/infra/queue"
 	"github.com/AllanCordeiro/person-st/infra/webserver"
+	"github.com/AllanCordeiro/person-st/infra/worker"
 )
 
 func main() {
@@ -36,11 +39,29 @@ func main() {
 		},
 	}
 
+	//TODO: await rabbitMQ starting up
+	time.Sleep(15 * time.Second)
+	rabbitMQ, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
+	if err != nil {
+		panic(err)
+	}
+	defer rabbitMQ.Close()
+
+	mqChannel, err := rabbitMQ.Channel()
+	if err != nil {
+		panic(err)
+	}
+	defer mqChannel.Close()
+
 	personDB := database.NewPersonDB(db)
 	personCache := cache.NewRedisInstance(pool)
+	personQueue := queue.NewRabbitMQImpl(mqChannel)
+	personQueue.QueueDeclare("person.created")
 
-	time.Sleep(3 * time.Second)
 	personDB.Warmup()
 
-	webserver.Serve(personDB, personCache)
+	worker := worker.NewCreatePersonWorker(personDB, *personQueue)
+	go worker.Run()
+
+	webserver.Serve(personDB, personCache, personQueue)
 }

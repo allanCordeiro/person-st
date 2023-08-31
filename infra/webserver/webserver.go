@@ -7,17 +7,18 @@ import (
 
 	"github.com/AllanCordeiro/person-st/application/gateway"
 	"github.com/AllanCordeiro/person-st/infra/cache"
+	"github.com/AllanCordeiro/person-st/infra/queue"
 	"github.com/AllanCordeiro/person-st/infra/webserver/handlers"
 	"github.com/go-chi/chi/v5"
 )
 
-func Serve(personGateway gateway.PersonGateway, cache cache.Cache) {
+func Serve(personGateway gateway.PersonGateway, cache cache.Cache, queue *queue.RabbitMQImpl) {
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
 		port = "8181"
 	}
 
-	handlers := handlers.NewPersonHandler(personGateway, cache)
+	handlers := handlers.NewPersonHandler(personGateway, cache, queue)
 	r := chi.NewRouter()
 	r.Route("/pessoas", func(r chi.Router) {
 		r.Post("/", handlers.CreatePerson)

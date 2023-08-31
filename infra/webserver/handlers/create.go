@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/AllanCordeiro/person-st/application/usecases/person"
@@ -22,10 +21,9 @@ func (h *PersonHandler) CreatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usecase := person.NewCreatePersonUseCase(h.PersonGateway, h.Cache)
+	usecase := person.NewCreatePersonUseCase(h.Cache, *h.Queue)
 	personOutput, err := usecase.Execute(input)
 	if err != nil {
-		log.Println(err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
@@ -33,6 +31,7 @@ func (h *PersonHandler) CreatePerson(w http.ResponseWriter, r *http.Request) {
 	output := &RequestCreateOutput{
 		value: "/pessoas/" + personOutput.ID,
 	}
+
 	w.Header().Add("Location", output.value)
 	w.WriteHeader(http.StatusCreated)
 }
